@@ -10,6 +10,7 @@
 
 const copyProjectTemplateAndReplace = require('../generator/copyProjectTemplateAndReplace');
 const path = require('path');
+const execFileSync = require('child_process').execFileSync;
 const fs = require('fs');
 
 /**
@@ -21,19 +22,10 @@ const fs = require('fs');
  *
  * - `name` - The short name used for the project, should be TitleCase
  * - `displayName` - The app's name on the home screen
+ * - `ejectModule` - Override the module which ejects the native code
  */
 
 function eject() {
-
-  const doesIOSExist = fs.existsSync(path.resolve('ios'));
-  const doesAndroidExist = fs.existsSync(path.resolve('android'));
-  if (doesIOSExist && doesAndroidExist) {
-    console.error(
-      'Both the iOS and Android folders already exist! Please delete `ios` and/or `android` ' +
-      'before ejecting.'
-    );
-    process.exit(1);
-  }
 
   let appConfig = null;
   try {
@@ -43,6 +35,21 @@ function eject() {
       `Eject requires an \`app.json\` config file to be located at ` +
       `${path.resolve('app.json')}, and it must at least specify a \`name\` for the project ` +
       `name, and a \`displayName\` for the app's home screen label.`
+    );
+    process.exit(1);
+  }
+
+  if (appConfig.ejectModule) {
+    execFileSync(appConfig.ejectModule, {stdio: 'inherit'});
+    process.exit();
+  }
+
+  const doesIOSExist = fs.existsSync(path.resolve('ios'));
+  const doesAndroidExist = fs.existsSync(path.resolve('android'));
+  if (doesIOSExist && doesAndroidExist) {
+    console.error(
+      'Both the iOS and Android folders already exist! Please delete `ios` and/or `android` ' +
+      'before ejecting.'
     );
     process.exit(1);
   }
